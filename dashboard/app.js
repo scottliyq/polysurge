@@ -689,7 +689,12 @@ function updateEventFeed() {
                         <span title="买入金额vs卖出金额的对比">${direction}</span>
                         ${priceChangeHtml}
                     </div>
-                    <span class="text-neon-blue" title="成交量是该市场平均水平的倍数">${event.volumeRatio.toFixed(1)}x均值</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-neon-blue" title="成交量是该市场平均水平的倍数">${event.volumeRatio.toFixed(1)}x均值</span>
+                        ${event.anomalies.includes('whale_trade') ? 
+                            `<span class="text-neon-purple font-medium" title="检测到大额交易 (>20x均值)">🐋 ${event.isBuy ? '大额买入' : '大额卖出'}</span>` 
+                            : ''}
+                    </div>
                 </div>
             </div>
         `;
@@ -851,16 +856,31 @@ function updateWhaleTrades() {
         return;
     }
 
-    container.innerHTML = whales.map(e => `
-        <div class="text-xs p-2 bg-dark-600/50 rounded">
+    container.innerHTML = whales.map(e => {
+        // 判断买入还是卖出方向
+        const isBuy = e.isBuy || e.netVolume > 0;
+        const directionIcon = isBuy ? '📈' : '📉';
+        const directionText = isBuy ? '买入' : '卖出';
+        const directionColor = isBuy ? 'neon-green' : 'neon-red';
+        const tradeSizeRatio = e.volumeRatio || 0;
+        
+        return `
+        <div class="text-xs p-2 bg-dark-600/50 rounded hover:bg-dark-600 transition-colors">
             <a href="https://polymarket.com/event/${e.slug}" target="_blank" rel="noopener"
-               class="truncate font-medium block hover:text-neon-blue">${e.market.slice(0, 30)}...</a>
-            <div class="flex items-center justify-between mt-1 text-gray-400">
-                <span>${formatTime(e.timestamp)}</span>
+               class="truncate font-medium block hover:text-neon-blue">${e.market.slice(0, 28)}...</a>
+            <div class="flex items-center justify-between mt-1">
+                <span class="text-gray-400">${formatTime(e.timestamp)}</span>
+                <span class="text-${directionColor} font-medium" title="交易方向">
+                    ${directionIcon} ${directionText}
+                </span>
+            </div>
+            <div class="flex items-center justify-between mt-1">
                 <span class="text-neon-blue font-medium" title="单笔交易金额">${formatCurrency(e.tradeSize)}</span>
+                <span class="text-gray-400 text-xs" title="相对平均交易规模">×${tradeSizeRatio.toFixed(1)}</span>
             </div>
         </div>
-    `).join('');
+        `;
+    }).join('');
 }
 
 /**
