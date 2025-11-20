@@ -221,6 +221,7 @@ async function fetchMarkets(limit) {
                 conditionId: m.conditionId,
                 question: m.question || '',
                 slug: slug,
+                eventSlug: (m.events && m.events[0] && m.events[0].slug) || slug,  // 使用 event slug
                 type: type,
                 volume24h: volume,
                 liquidity: liquidity,
@@ -401,6 +402,7 @@ function detectAnomalies(trades, market) {
                 marketType: market.type,
                 conditionId: market.conditionId,
                 slug: market.slug,
+                eventSlug: market.eventSlug,  // 添加 event slug
                 anomalies: anomalies,
                 walletCount: walletCount,
                 totalVolume: totalVol,
@@ -631,7 +633,8 @@ function updateEventFeed() {
             '<span class="text-neon-red">卖出主导</span>';
 
         const marketTypeConfig = MARKET_TYPES[event.marketType] || MARKET_TYPES.general;
-        const marketUrl = `https://polymarket.com/event/${event.slug}`;
+        const marketUrl = `https://polymarket.com/event/${event.eventSlug}`;
+        const outcome = event.outcome || 'N/A';
 
         // 评分颜色和等级
         const score = event.score || 0;
@@ -661,7 +664,7 @@ function updateEventFeed() {
         }
 
         return `
-            <div class="event-item p-3 border-b border-white/5 ${score >= 70 ? 'bg-neon-red/5' : score >= 40 ? 'bg-neon-yellow/5' : ''}">
+            <div class="event-item p-3 border-b border-white/5 ${score >= 70 ? 'bg-neon-red/5' : score >= 40 ? 'bg-neon-yellow/5' : ''} relative">
                 <div class="flex items-start justify-between mb-2">
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center gap-2 mb-1">
@@ -670,7 +673,7 @@ function updateEventFeed() {
                                 ${score}分
                             </span>
                             <a href="${marketUrl}" target="_blank" rel="noopener"
-                               class="text-sm font-medium truncate hover:text-neon-blue transition-colors flex-1">
+                               class="text-sm font-medium truncate hover:text-neon-blue transition-colors flex-1" title="${event.market}">
                                 ${event.market.slice(0, 45)}${event.market.length > 45 ? '...' : ''}
                                 <svg class="w-3 h-3 inline ml-1 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/>
@@ -688,6 +691,7 @@ function updateEventFeed() {
                     <div class="flex items-center gap-3">
                         <span title="5分钟窗口内的总成交金额">💰 ${formatCurrency(event.totalVolume)}</span>
                         <span title="买入金额vs卖出金额的对比">${direction}</span>
+                        <span class="text-neon-blue" title="交易结果">📊 ${outcome}</span>
                         ${priceChangeHtml}
                     </div>
                     <div class="flex items-center gap-2">
@@ -868,8 +872,8 @@ function updateWhaleTrades() {
         
         return `
         <div class="text-xs p-2 bg-dark-600/50 rounded hover:bg-dark-600 transition-colors whale-trade-item">
-            <a href="https://polymarket.com/event/${e.slug}" target="_blank" rel="noopener"
-               class="truncate font-medium block hover:text-neon-blue">${e.market.slice(0, 28)}...</a>
+            <a href="https://polymarket.com/event/${e.eventSlug}" target="_blank" rel="noopener"
+               class="truncate font-medium block hover:text-neon-blue" title="${e.market}">${e.market.slice(0, 50)}...</a>
             <div class="flex items-center justify-between mt-1">
                 <span class="text-gray-400">${formatTime(e.timestamp)}</span>
                 <span class="text-${directionColor} font-medium" title="交易方向">
@@ -877,11 +881,11 @@ function updateWhaleTrades() {
                 </span>
             </div>
             <div class="flex items-center justify-between mt-1">
-                <span class="text-neon-blue font-medium" title="单笔交易金额">${formatCurrency(e.tradeSize)}</span>
+                <div class="flex items-center gap-2">
+                    <span class="text-neon-blue font-medium" title="单笔交易金额">${formatCurrency(e.tradeSize)}</span>
+                    <span class="text-neon-blue text-xs" title="交易结果">📊 ${outcome}</span>
+                </div>
                 <span class="text-gray-400 text-xs" title="相对平均交易规模">×${tradeSizeRatio.toFixed(1)}</span>
-            </div>
-            <div class="outcome-tooltip hidden absolute bg-dark-800 border border-neon-blue/50 rounded px-2 py-1 text-xs text-neon-blue shadow-lg z-10">
-                Outcome: ${outcome}
             </div>
         </div>
         `;
@@ -997,8 +1001,8 @@ function updateVolumeSpikes() {
 
     container.innerHTML = spikes.map(e => `
         <div class="text-xs p-2 bg-dark-600/50 rounded flex items-center justify-between">
-            <a href="https://polymarket.com/event/${e.slug}" target="_blank" rel="noopener"
-               class="truncate flex-1 hover:text-neon-blue">${e.market.slice(0, 25)}...</a>
+            <a href="https://polymarket.com/event/${e.eventSlug}" target="_blank" rel="noopener"
+               class="truncate flex-1 hover:text-neon-blue" title="${e.market}">${e.market.slice(0, 25)}...</a>
             <div class="flex items-center gap-2 ml-2">
                 <span class="text-gray-500" title="5分钟成交量">${formatCurrency(e.totalVolume)}</span>
                 <span class="text-neon-green font-medium" title="相对平均值的倍数">${e.volumeRatio.toFixed(1)}x</span>
@@ -1026,8 +1030,8 @@ function updatePriceMoves() {
 
     container.innerHTML = moves.map(e => `
         <div class="text-xs p-2 bg-dark-600/50 rounded flex items-center justify-between">
-            <a href="https://polymarket.com/event/${e.slug}" target="_blank" rel="noopener"
-               class="truncate flex-1 hover:text-neon-blue">${e.market.slice(0, 25)}...</a>
+            <a href="https://polymarket.com/event/${e.eventSlug}" target="_blank" rel="noopener"
+               class="truncate flex-1 hover:text-neon-blue" title="${e.market}">${e.market.slice(0, 25)}...</a>
             <div class="flex items-center gap-2 ml-2">
                 <span class="text-gray-500">${formatTime(e.timestamp)}</span>
                 <span class="text-neon-pink font-medium" title="5分钟内价格波动幅度">${e.priceRangePct.toFixed(1)}%</span>
