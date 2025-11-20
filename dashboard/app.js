@@ -411,7 +411,8 @@ function detectAnomalies(trades, market) {
                 isBuy: netVol > 0,
                 tradeCount: window.length,
                 score: score,  // 异常强度评分
-                priceChange: priceChange  // 信号验证: 后续价格变化
+                priceChange: priceChange,  // 信号验证: 后续价格变化
+                outcome: t.outcome || 'N/A'  // 交易的 outcome (Yes/No)
             });
         }
     }
@@ -863,9 +864,10 @@ function updateWhaleTrades() {
         const directionText = isBuy ? '买入' : '卖出';
         const directionColor = isBuy ? 'neon-green' : 'neon-red';
         const tradeSizeRatio = e.volumeRatio || 0;
+        const outcome = e.outcome || 'N/A';
         
         return `
-        <div class="text-xs p-2 bg-dark-600/50 rounded hover:bg-dark-600 transition-colors">
+        <div class="text-xs p-2 bg-dark-600/50 rounded hover:bg-dark-600 transition-colors whale-trade-item">
             <a href="https://polymarket.com/event/${e.slug}" target="_blank" rel="noopener"
                class="truncate font-medium block hover:text-neon-blue">${e.market.slice(0, 28)}...</a>
             <div class="flex items-center justify-between mt-1">
@@ -877,6 +879,9 @@ function updateWhaleTrades() {
             <div class="flex items-center justify-between mt-1">
                 <span class="text-neon-blue font-medium" title="单笔交易金额">${formatCurrency(e.tradeSize)}</span>
                 <span class="text-gray-400 text-xs" title="相对平均交易规模">×${tradeSizeRatio.toFixed(1)}</span>
+            </div>
+            <div class="outcome-tooltip hidden absolute bg-dark-800 border border-neon-blue/50 rounded px-2 py-1 text-xs text-neon-blue shadow-lg z-10">
+                Outcome: ${outcome}
             </div>
         </div>
         `;

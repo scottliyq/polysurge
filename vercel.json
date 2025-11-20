@@ -1,1 +1,25 @@
-{"rewrites":[{"source":"/(.*)","destination":"/index.html"}]}
+{
+    "github": {
+        "silent": true
+    },
+    "functions": {
+        "dashboard/api/**/*.js": {
+            "memory": 1024,
+            "maxDuration": 10
+        }
+    },
+    "rewrites": [
+        {
+            "source": "/api/(.*)",
+            "destination": "/dashboard/api/$1"
+        },
+        {
+            "source": "/(.*\\.(js|css|png|jpg|jpeg|gif|svg|ico))",
+            "destination": "/dashboard/$1"
+        },
+        {
+            "source": "/(.*)",
+            "destination": "/dashboard/index.html"
+        }
+    ]
+}
