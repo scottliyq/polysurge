@@ -610,7 +610,7 @@ function updateStats() {
 function updateEventFeed() {
     const container = document.getElementById('event-feed');
     const filteredEvents = getFilteredEvents();
-    const recentEvents = filteredEvents.slice(0, 50);
+    const recentEvents = filteredEvents.filter(e => e.marketType !== 'sports').slice(0, 50);
 
     if (recentEvents.length === 0) {
         container.innerHTML = `
