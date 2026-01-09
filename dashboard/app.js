@@ -854,7 +854,7 @@ function updateWhaleTrades() {
 
     const whales = filteredEvents
         .filter(e => e.anomalies.includes('whale_trade') && e.marketType !== 'sports')
-        .sort((a, b) => b.tradeSize - a.tradeSize)
+        .sort((a, b) => b.timestamp - a.timestamp)
         .slice(0, 20);
 
     if (whales.length === 0) {
