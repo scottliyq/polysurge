@@ -854,8 +854,9 @@ function updateWhaleTrades() {
 
     const whales = filteredEvents
         .filter(e => e.anomalies.includes('whale_trade') && e.marketType !== 'sports')
-        .sort((a, b) => b.timestamp - a.timestamp)
-        .slice(0, 20);
+        .sort((a, b) => b.tradeSize - a.tradeSize) // 先按金额挑出最大
+        .slice(0, 20)
+        .sort((a, b) => b.timestamp - a.timestamp); // 对挑出的20条按时间排序
 
     if (whales.length === 0) {
         container.innerHTML = '<div class="text-center text-gray-500 py-2 text-xs">暂无大额交易</div>';
