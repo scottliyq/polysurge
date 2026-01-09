@@ -409,6 +409,7 @@ function detectAnomalies(trades, market) {
                 netVolume: netVol,
                 volumeRatio: medianVolume > 0 ? totalVol / medianVolume : 0,
                 tradeSize: currentSize,
+                tradePrice: t.price || 0,
                 priceRangePct: avgPrice > 0 ? (priceRange / avgPrice * 100) : 0,
                 isBuy: netVol > 0,
                 tradeCount: window.length,
@@ -852,9 +853,9 @@ function updateWhaleTrades() {
     const filteredEvents = getFilteredEvents();
 
     const whales = filteredEvents
-        .filter(e => e.anomalies.includes('whale_trade') && e.marketType !== 'sports')
+        .filter(e => e.anomalies.includes('whale_trade'))
         .sort((a, b) => b.tradeSize - a.tradeSize)
-        .slice(0, 5);
+        .slice(0, 20);
 
     if (whales.length === 0) {
         container.innerHTML = '<div class="text-center text-gray-500 py-2 text-xs">暂无大额交易</div>';
@@ -869,11 +870,12 @@ function updateWhaleTrades() {
         const directionColor = isBuy ? 'neon-green' : 'neon-red';
         const tradeSizeRatio = e.volumeRatio || 0;
         const outcome = e.outcome || 'N/A';
+        const tradePrice = e.tradePrice || 0;
         
         return `
         <div class="text-xs p-2 bg-dark-600/50 rounded hover:bg-dark-600 transition-colors whale-trade-item">
             <a href="https://polymarket.com/event/${e.eventSlug}" target="_blank" rel="noopener"
-               class="truncate font-medium block hover:text-neon-blue" title="${e.market}">${e.market.slice(0, 50)}...</a>
+               class="font-medium block hover:text-neon-blue break-words" title="${e.market}">${e.market}</a>
             <div class="flex items-center justify-between mt-1">
                 <span class="text-gray-400">${formatTime(e.timestamp)}</span>
                 <span class="text-${directionColor} font-medium" title="交易方向">
@@ -881,8 +883,9 @@ function updateWhaleTrades() {
                 </span>
             </div>
             <div class="flex items-center justify-between mt-1">
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-3">
                     <span class="text-neon-blue font-medium" title="单笔交易金额">${formatCurrency(e.tradeSize)}</span>
+                    <span class="text-neon-green font-medium" title="成交价格">$${tradePrice.toFixed(3)}</span>
                     <span class="text-neon-blue text-xs" title="交易结果">📊 ${outcome}</span>
                 </div>
                 <span class="text-gray-400 text-xs" title="相对平均交易规模">×${tradeSizeRatio.toFixed(1)}</span>
